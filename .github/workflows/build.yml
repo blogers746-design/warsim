@@ -18,7 +18,7 @@ jobs:
           wget -q https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip
           wget -q https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz
           unzip -q Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip
-          mv Godot_v${GODOT_VERSION}-stable_linux.x86_64 /usr/local/bin/godot  sudo mv Godot_v${GODOT_VERSION}-stable_linux.x86_64 /usr/local/bin/godot
+          sudo mv Godot_v${GODOT_VERSION}-stable_linux.x86_64 /usr/local/bin/godot
           mkdir -p ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
           unzip -q Godot_v${GODOT_VERSION}-stable_export_templates.tpz -d tpl
           mv tpl/templates/* ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable/
@@ -26,13 +26,10 @@ jobs:
         run: |
           keytool -keyalg RSA -genkeypair -alias androiddebugkey -keypass android -keystore debug.keystore -storepass android -dname "CN=Android Debug,O=Android,C=US" -validity 9999
           mkdir -p ~/.config/godot
-          cat > ~/.config/godot/editor_settings-${GODOT_VERSION}.tres <<EOT
-          [gd_resource type="EditorSettings" format=3]
-          [resource]
-          export/android/android_sdk_path = "${ANDROID_HOME}"
-          export/android/java_sdk_path = "${JAVA_HOME}"
-          EOT
-          sed -i 's/^          //' ~/.config/godot/editor_settings-${GODOT_VERSION}.tres
+          echo '[gd_resource type="EditorSettings" format=3]' > ~/.config/godot/editor_settings-${GODOT_VERSION}.tres
+          echo '[resource]' >> ~/.config/godot/editor_settings-${GODOT_VERSION}.tres
+          echo "export/android/android_sdk_path = \"${ANDROID_HOME}\"" >> ~/.config/godot/editor_settings-${GODOT_VERSION}.tres
+          echo "export/android/java_sdk_path = \"${JAVA_HOME}\"" >> ~/.config/godot/editor_settings-${GODOT_VERSION}.tres
       - name: Export APK
         env:
           GODOT_ANDROID_KEYSTORE_DEBUG_PATH: ${{ github.workspace }}/debug.keystore
@@ -40,7 +37,7 @@ jobs:
           GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
         run: |
           mkdir -p build
-          godot --headless --import  true
+          if ! godot --headless --import; then echo "import warning"; fi
           godot --headless --export-debug "Android" build/warsim.apk
       - uses: actions/upload-artifact@v4
         with:
