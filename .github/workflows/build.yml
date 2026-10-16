@@ -26,7 +26,9 @@ jobs:
           mkdir -p ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
           unzip -q Godot_v${GODOT_VERSION}-stable_export_templates.tpz -d tpl
           mv tpl/templates/* ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable/
-          ls ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable/ | head -30
+      - name: Import project
+        run: |
+          if ! godot --headless --import; then echo "import warning"; fi
       - name: Configure Android
         run: |
           keytool -keyalg RSA -genkeypair -alias androiddebugkey -keypass android -keystore debug.keystore -storepass android -dname "CN=Android Debug,O=Android,C=US" -validity 9999
@@ -40,7 +42,7 @@ jobs:
           echo "export/android/debug_keystore_user = \"androiddebugkey\"" >> $F
           echo "export/android/debug_keystore_pass = \"android\"" >> $F
           cp $F ~/.config/godot/editor_settings-4.3.tres
-          cat $F
+          ls ~/.config/godot
       - name: Export APK
         env:
           ANDROID_HOME: /usr/local/lib/android/sdk
@@ -50,8 +52,6 @@ jobs:
           GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
         run: |
           mkdir -p build
-          if ! godot --headless --import; then echo "import warning"; fi
-          cat ~/.config/godot/editor_settings-4.3.tres | head -20
           godot --headless --verbose --export-debug "Android" build/warsim.apk
       - uses: actions/upload-artifact@v4
         with:
